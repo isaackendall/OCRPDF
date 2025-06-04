@@ -5,8 +5,8 @@ A simple GUI application for performing OCR (Optical Character Recognition) on P
 ## Prerequisites
 
 - Python 3.x
-- ocrmypdf (install via Homebrew on macOS: `brew install ocrmypdf`)
-- Tkinter (usually comes with Python)
+- [ocrmypdf](https://ocrmypdf.readthedocs.io/) (install with your package manager, e.g. `brew install ocrmypdf` on macOS)
+- Tkinter (often installed with Python; on Linux install the `python3-tk` package)
 
 ## Installation
 
@@ -49,6 +49,18 @@ python ocr_gui.py
 - Detailed logging
 - Configurable maximum megapixels
 - Skip existing files option
+
+## Command options
+
+The application invokes `ocrmypdf` with:
+
+```
+ocrmypdf --force-ocr --skip-big <max_mp> input.pdf output.pdf
+```
+
+`--force-ocr` ensures that a fresh text layer is created even if the PDF
+already contains text. `--skip-big` allows you to avoid processing pages with
+images larger than the specified megapixel limit.
 
 ## Notes
 
