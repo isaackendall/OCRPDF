@@ -1,3 +1,11 @@
+"""Tkinter-based front end for ``ocrmypdf``.
+
+This simple GUI lets users select one or more PDF files and run OCR on them
+using ``ocrmypdf``. The OCR command always includes ``--force-ocr`` to ensure
+text layers are regenerated. Large images can be skipped by supplying a value
+for the ``--skip-big`` option.
+"""
+
 import tkinter as tk
 from tkinter import filedialog, messagebox, scrolledtext
 import subprocess
@@ -8,14 +16,20 @@ import queue
 from tkinter import ttk
 
 def find_ocrmypdf():
-    # Locate ocrmypdf using the system PATH.
+    """Return the path to ``ocrmypdf`` or ``None`` if it cannot be located."""
     ocr_path = shutil.which("ocrmypdf")
     if not ocr_path:
-        messagebox.showerror("Error", "ocrmypdf not found in PATH. Please install it (e.g., via Homebrew).")
+        messagebox.showerror(
+            "Error",
+            "The 'ocrmypdf' command was not found.\n"
+            "Install it and ensure it is available on your PATH."
+        )
         return None
     return ocr_path
 
 class OCRApp:
+    """Main application window for running ``ocrmypdf`` on selected PDFs."""
+
     # Constants
     DEFAULT_MAX_MEGAPIXELS = "10"
     MAX_RETRIES = 3
@@ -182,16 +196,32 @@ class OCRApp:
 
                         self.log(f"Processing: {file}")
                         self.status_var.set(f"Processing file {self.current_file} of {self.total_files}")
-                        command = [self.ocrmypdf_path, "--force-ocr", "--skip-big", str(max_mp), file, output_file]
-                        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-                        if result.returncode == 0:
+                        command = [
+                            self.ocrmypdf_path,
+                            "--force-ocr",
+                            "--skip-big",
+                            str(max_mp),
+                            file,
+                            output_file,
+                        ]
+                        self.log("Running: " + " ".join(command))
+                        try:
+                            result = subprocess.run(
+                                command,
+                                capture_output=True,
+                                text=True,
+                                check=True,
+                            )
                             self.log(f"Successfully processed: {file} -> {output_file}")
                             break
-                        else:
-                            error_msg = result.stderr.strip()
+                        except subprocess.CalledProcessError as exc:
+                            error_msg = exc.stderr.strip() or exc.stdout.strip()
                             self.log(f"Error processing {file}: {error_msg}")
                             if retry == self.MAX_RETRIES - 1:
-                                messagebox.showerror("Error", f"Failed to process {file}:\n{error_msg}")
+                                messagebox.showerror(
+                                    "Error",
+                                    f"Failed to process {file}:\n{error_msg}",
+                                )
                     except Exception as e:
                         if retry == self.MAX_RETRIES - 1:
                             self.log(f"Failed after {self.MAX_RETRIES} attempts: {file}")
