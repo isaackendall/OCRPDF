@@ -7,13 +7,13 @@ for the ``--skip-big`` option.
 """
 
 import tkinter as tk
-from tkinter import filedialog, messagebox, scrolledtext
+from tkinter import filedialog, messagebox, scrolledtext, ttk
 import subprocess
 import threading
 import os
 import shutil
 import queue
-from tkinter import ttk
+
 
 def find_ocrmypdf():
     """Return the path to ``ocrmypdf`` or ``None`` if it cannot be located."""
@@ -27,14 +27,16 @@ def find_ocrmypdf():
         return None
     return ocr_path
 
+
 class OCRApp:
     """Main application window for running ``ocrmypdf`` on selected PDFs."""
 
     # Constants
     DEFAULT_MAX_MEGAPIXELS = "10"
     MAX_RETRIES = 3
-    
+
     def __init__(self, root):
+        """Configure the UI and initialize state."""
         self.root = root
         self.root.title("OCR GUI App")
 
@@ -61,6 +63,7 @@ class OCRApp:
         self.update_log()  # Start log updating loop
 
     def create_widgets(self):
+        """Build the application widgets."""
         frame = tk.Frame(self.root)
         frame.pack(padx=10, pady=10)
 
@@ -99,13 +102,15 @@ class OCRApp:
         # Action buttons
         self.start_button = tk.Button(button_frame, text="Start OCR", command=self.start_ocr)
         self.start_button.pack(side=tk.LEFT, padx=5)
-        
-        self.cancel_button = tk.Button(button_frame, text="Cancel", command=self.cancel_processing, state="disabled")
+
+        self.cancel_button = tk.Button(button_frame, text="Cancel",
+                                       command=self.cancel_processing, state="disabled")
         self.cancel_button.pack(side=tk.LEFT, padx=5)
 
         # Status bar
         self.status_var = tk.StringVar(value="Ready")
-        self.status_bar = tk.Label(self.root, textvariable=self.status_var, bd=1, relief=tk.SUNKEN, anchor=tk.W)
+        self.status_bar = tk.Label(self.root, textvariable=self.status_var,
+                                   bd=1, relief=tk.SUNKEN, anchor=tk.W)
         self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
 
         # Log output area (scrollable)
@@ -113,7 +118,11 @@ class OCRApp:
         self.log_text.pack(padx=10, pady=10)
 
     def select_files(self):
-        files = filedialog.askopenfilenames(title="Select PDF Files", filetypes=[("PDF Files", "*.pdf")])
+        """Open a dialog to choose PDF files for processing."""
+        files = filedialog.askopenfilenames(
+            title="Select PDF Files",
+            filetypes=[("PDF Files", "*.pdf")],
+        )
         if files:
             self.files = list(files)
             self.files_label.config(text=f"{len(self.files)} file(s) selected")
@@ -121,6 +130,7 @@ class OCRApp:
             self.files_label.config(text="No files selected")
 
     def select_output_folder(self):
+        """Prompt the user for the folder to store OCR results."""
         folder = filedialog.askdirectory(title="Select Output Folder")
         if folder:
             self.output_folder = folder
@@ -129,11 +139,11 @@ class OCRApp:
             self.output_label.config(text="No output folder selected")
 
     def log(self, message):
-        # Place log messages into a thread-safe queue
+        """Add a message to the log queue."""
         self.log_queue.put(message)
 
     def update_log(self):
-        # Periodically update the log_text widget with messages from the queue
+        """Periodically pull messages from the queue and display them."""
         try:
             while True:
                 message = self.log_queue.get_nowait()
@@ -146,12 +156,14 @@ class OCRApp:
         self.root.after(100, self.update_log)
 
     def cancel_processing(self):
+        """Signal the processing thread to stop."""
         if self.is_processing:
             self.should_cancel = True
             self.status_var.set("Cancelling...")
             self.log("Cancelling processing...")
 
     def start_ocr(self):
+        """Validate input and start the OCR thread."""
         if not self.files:
             messagebox.showerror("Error", "No PDF files selected.")
             return
@@ -175,6 +187,7 @@ class OCRApp:
         threading.Thread(target=self.process_files, args=(max_mp,), daemon=True).start()
 
     def process_files(self, max_mp):
+        """Run OCR on the selected files."""
         try:
             self.total_files = len(self.files)
             for index, file in enumerate(self.files):
@@ -184,7 +197,7 @@ class OCRApp:
 
                 self.current_file = index + 1
                 self.update_progress()
-                
+
                 for retry in range(self.MAX_RETRIES):
                     try:
                         base_name = os.path.splitext(os.path.basename(file))[0]
@@ -195,7 +208,8 @@ class OCRApp:
                             break
 
                         self.log(f"Processing: {file}")
-                        self.status_var.set(f"Processing file {self.current_file} of {self.total_files}")
+                        self.status_var.set(
+                            f"Processing file {self.current_file} of {self.total_files}")
                         command = [
                             self.ocrmypdf_path,
                             "--force-ocr",
@@ -206,7 +220,7 @@ class OCRApp:
                         ]
                         self.log("Running: " + " ".join(command))
                         try:
-                            result = subprocess.run(
+                            subprocess.run(
                                 command,
                                 capture_output=True,
                                 text=True,
@@ -236,11 +250,20 @@ class OCRApp:
             self.root.after(0, lambda: self.status_var.set("Ready"))
 
     def update_progress(self):
+        """Refresh the progress bar and label."""
         progress = (self.current_file / self.total_files) * 100
         self.progress_var.set(progress)
-        self.progress_label.config(text=f"Processing: {self.current_file}/{self.total_files} files")
+        self.progress_label.config(
+            text=f"Processing: {self.current_file}/{self.total_files} files"
+        )
+
+
+def main():
+    """Launch the OCR GUI application."""
+    root = tk.Tk()
+    OCRApp(root)
+    root.mainloop()
+
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = OCRApp(root)
-    root.mainloop()
+    main()
