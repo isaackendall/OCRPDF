@@ -66,4 +66,23 @@ images larger than the specified megapixel limit.
 
 - The application requires ocrmypdf to be installed on your system
 - Processed files will be saved with "_OCR" appended to the original filename
-- The log area shows detailed information about the processing status 
+- The log area shows detailed information about the processing status
+
+## Building an executable
+
+You can create a standalone executable using [PyInstaller](https://pyinstaller.org/):
+
+```bash
+pyinstaller --onefile ocr_gui.py
+```
+
+The resulting program appears in the `dist/` folder and can be run without Python.
+
+## Installing as a package
+
+Install the project using `pip` and run it from anywhere:
+
+```bash
+pip install .
+ocr-gui
+```
