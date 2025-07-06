@@ -27,6 +27,27 @@ def find_ocrmypdf():
         candidate = os.path.join(base_dir, "ocrmypdf")
         if os.path.exists(candidate):
             return candidate
+        if os.path.exists(candidate + ".exe"):
+            return candidate + ".exe"
+
+    if messagebox.askyesno(
+        "Install ocrmypdf",
+        "The 'ocrmypdf' command was not found.\nInstall it now via pip?",
+    ):
+        try:
+            subprocess.check_call([
+                sys.executable,
+                "-m",
+                "pip",
+                "install",
+                "ocrmypdf",
+            ])
+            return shutil.which("ocrmypdf")
+        except Exception as exc:
+            messagebox.showerror(
+                "Error", f"Failed to install ocrmypdf:\n{exc}"
+            )
+            return None
 
     messagebox.showerror(
         "Error",

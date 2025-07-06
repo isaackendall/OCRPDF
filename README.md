@@ -89,7 +89,8 @@ its path:
 which ocrmypdf
 ```
 
-Then supply that path to PyInstaller using the `--add-binary` option:
+Then supply that path to PyInstaller using the `--add-binary` option. On
+Windows use a semicolon (`;`) instead of a colon to separate the destination:
 
 ```bash
 pyinstaller --onefile \
@@ -100,6 +101,12 @@ pyinstaller --onefile \
 Replace `/path/to/ocrmypdf` with the output of `which ocrmypdf`. The bundled
 binary will be copied next to the executable so the application can find it at
 runtime.
+
+### Automatic installation
+
+If the program cannot locate `ocrmypdf` when launched, it will prompt you to
+install it using `pip`. This requires an internet connection and may take a
+moment to complete.
 
 ## Installing as a package
 
