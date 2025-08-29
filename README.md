@@ -1,19 +1,33 @@
 # PDF OCR Application
 
-A simple GUI application for performing OCR (Optical Character Recognition) on PDF files using ocrmypdf.
+A simple GUI application for performing OCR (Optical Character Recognition) on PDF files using ocrmypdf. This application allows you to:
+- Batch process multiple PDF files
+- Choose output directory
+- Configure OCR settings
+- View detailed processing logs
 
 ## Prerequisites
 
-- Python 3.x
-- [ocrmypdf](https://ocrmypdf.readthedocs.io/) (install with your package manager, e.g. `brew install ocrmypdf` on macOS)
-- Tkinter (often installed with Python; on Linux install the `python3-tk` package)
+- Python 3.7 or higher
+- [ocrmypdf](https://ocrmypdf.readthedocs.io/) (requires Tesseract OCR)
+  - **macOS**: `brew install tesseract ocrmypdf`
+  - **Linux (Debian/Ubuntu)**: 
+    ```bash
+    sudo apt install tesseract-ocr
+    pip install ocrmypdf
+    ```
+  - **Windows**: 
+    - Install [Tesseract OCR](https://github.com/UB-Mannheim/tesseract/wiki)
+    - `pip install ocrmypdf`
+- Tkinter (usually comes with Python)
+  - **Linux**: `sudo apt install python3-tk`
 
 ## Installation
 
 1. Clone this repository:
 ```bash
-git clone <your-repository-url>
-cd pdf-ocr-app
+git clone https://github.com/isaackendall/OCRPDF.git
+cd OCRPDF
 ```
 
 2. Create and activate a virtual environment:
@@ -64,25 +78,47 @@ images larger than the specified megapixel limit.
 
 ## Notes
 
-- The application requires ocrmypdf to be installed on your system
+- The application requires ocrmypdf and Tesseract OCR to be installed on your system
 - Processed files will be saved with "_OCR" appended to the original filename
 - The log area shows detailed information about the processing status
+- For large PDFs, consider increasing the maximum megapixels value if pages are being skipped
 
-## Building an executable
+## Building an Executable
 
 You can create a standalone executable using [PyInstaller](https://pyinstaller.org/):
 
+1. First install PyInstaller:
+   ```bash
+   pip install pyinstaller
+   ```
+
+2. Build the executable:
+   ```bash
+   pyinstaller --onefile --windowed ocr_gui.py
+   ```
+
+The resulting executable will be in the `dist/` folder. Note that users will still need to have `ocrmypdf` and Tesseract OCR installed on their system.
+
+## Installing as a Package
+
+You can install the application as a Python package:
+
 ```bash
-pyinstaller --onefile ocr_gui.py
-```
+# Install in development mode
+pip install -e .
 
-The resulting program appears in the `dist/` folder and can be run without Python.
-
-## Installing as a package
-
-Install the project using `pip` and run it from anywhere:
-
-```bash
-pip install .
+# Run the application
 ocr-gui
 ```
+
+## License
+
+This project is open source and available under the [MIT License](LICENSE).
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## Support
+
+For issues and feature requests, please [open an issue](https://github.com/isaackendall/OCRPDF/issues).
