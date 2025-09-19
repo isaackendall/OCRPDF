@@ -69,12 +69,14 @@ python ocr_gui.py
 The application invokes `ocrmypdf` with:
 
 ```
-ocrmypdf --force-ocr --skip-big <max_mp> input.pdf output.pdf
+ocrmypdf --force-ocr --skip-big <max_mp> --continue-on-soft-render-error input.pdf output.pdf
 ```
 
 `--force-ocr` ensures that a fresh text layer is created even if the PDF
 already contains text. `--skip-big` allows you to avoid processing pages with
-images larger than the specified megapixel limit.
+images larger than the specified megapixel limit. `--continue-on-soft-render-error`
+helps handle PDFs that cause Ghostscript rendering errors by continuing processing
+on other pages.
 
 ## Notes
 

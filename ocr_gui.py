@@ -215,6 +215,7 @@ class OCRApp:
                             "--force-ocr",
                             "--skip-big",
                             str(max_mp),
+                            "--continue-on-soft-render-error",
                             file,
                             output_file,
                         ]
