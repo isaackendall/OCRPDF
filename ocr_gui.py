@@ -12,21 +12,49 @@ import subprocess
 import threading
 import os
 import shutil
+import sys
 import queue
 
 
 def find_ocrmypdf():
     """Return the path to ``ocrmypdf`` or ``None`` if it cannot be located."""
     ocr_path = shutil.which("ocrmypdf")
-    if not ocr_path:
-        messagebox.showerror(
-            "Error",
-            "The 'ocrmypdf' command was not found.\n"
-            "Install it and ensure it is available on your PATH."
-        )
-        return None
-    return ocr_path
+    if ocr_path:
+        return ocr_path
 
+    if getattr(sys, "frozen", False):
+        base_dir = getattr(sys, "_MEIPASS", os.path.dirname(sys.executable))
+        candidate = os.path.join(base_dir, "ocrmypdf")
+        if os.path.exists(candidate):
+            return candidate
+        if os.path.exists(candidate + ".exe"):
+            return candidate + ".exe"
+
+    if messagebox.askyesno(
+        "Install ocrmypdf",
+        "The 'ocrmypdf' command was not found.\nInstall it now via pip?",
+    ):
+        try:
+            subprocess.check_call([
+                sys.executable,
+                "-m",
+                "pip",
+                "install",
+                "ocrmypdf",
+            ])
+            return shutil.which("ocrmypdf")
+        except Exception as exc:
+            messagebox.showerror(
+                "Error", f"Failed to install ocrmypdf:\n{exc}"
+            )
+            return None
+
+    messagebox.showerror(
+        "Error",
+        "The 'ocrmypdf' command was not found.\n"
+        "Install it and ensure it is available on your PATH.",
+    )
+    return None
 
 class OCRApp:
     """Main application window for running ``ocrmypdf`` on selected PDFs."""

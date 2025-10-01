@@ -101,6 +101,36 @@ You can create a standalone executable using [PyInstaller](https://pyinstaller.o
 
 The resulting executable will be in the `dist/` folder. Note that users will still need to have `ocrmypdf` and Tesseract OCR installed on their system.
 
+### Bundling `ocrmypdf`
+
+The executable above still expects the `ocrmypdf` command to be installed on the
+system. If you want the program to work on machines where `ocrmypdf` is not
+already available, include the `ocrmypdf` binary during the build. First locate
+its path:
+
+```bash
+which ocrmypdf
+```
+
+Then supply that path to PyInstaller using the `--add-binary` option. On
+Windows use a semicolon (`;`) instead of a colon to separate the destination:
+
+```bash
+pyinstaller --onefile \
+    --add-binary "/path/to/ocrmypdf:." \
+    ocr_gui.py
+```
+
+Replace `/path/to/ocrmypdf` with the output of `which ocrmypdf`. The bundled
+binary will be copied next to the executable so the application can find it at
+runtime.
+
+### Automatic installation
+
+If the program cannot locate `ocrmypdf` when launched, it will prompt you to
+install it using `pip`. This requires an internet connection and may take a
+moment to complete.
+
 ## Installing as a Package
 
 You can install the application as a Python package:
