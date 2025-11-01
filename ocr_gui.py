@@ -86,6 +86,7 @@ class OCRApp:
         self.should_cancel = False
 
         self.log_queue = queue.Queue()
+        self.current_process = None
 
         self.create_widgets()
         self.update_log()  # Start log updating loop
@@ -189,6 +190,13 @@ class OCRApp:
             self.should_cancel = True
             self.status_var.set("Cancelling...")
             self.log("Cancelling processing...")
+            process = self.current_process
+            if process and process.poll() is None:
+                try:
+                    process.terminate()
+                    self.log("Termination signal sent to current OCR process.")
+                except Exception as exc:
+                    self.log(f"Failed to terminate current process: {exc}")
 
     def start_ocr(self):
         """Validate input and start the OCR thread."""
@@ -218,9 +226,12 @@ class OCRApp:
         """Run OCR on the selected files."""
         try:
             self.total_files = len(self.files)
+            cancellation_logged = False
             for index, file in enumerate(self.files):
                 if self.should_cancel:
-                    self.log("Processing cancelled by user.")
+                    if not cancellation_logged:
+                        self.log("Processing cancelled by user.")
+                        cancellation_logged = True
                     break
 
                 self.current_file = index + 1
@@ -248,17 +259,31 @@ class OCRApp:
                             output_file,
                         ]
                         self.log("Running: " + " ".join(command))
+                        self.current_process = subprocess.Popen(
+                            command,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE,
+                            text=True,
+                        )
                         try:
-                            subprocess.run(
-                                command,
-                                capture_output=True,
-                                text=True,
-                                check=True,
-                            )
+                            stdout, stderr = self.current_process.communicate()
+                            returncode = self.current_process.returncode
+                        finally:
+                            self.current_process = None
+
+                        if self.should_cancel:
+                            if not cancellation_logged:
+                                self.log("Processing cancelled by user.")
+                                cancellation_logged = True
+                            break
+
+                        if returncode == 0:
                             self.log(f"Successfully processed: {file} -> {output_file}")
                             break
-                        except subprocess.CalledProcessError as exc:
-                            error_msg = exc.stderr.strip() or exc.stdout.strip()
+                        else:
+                            error_msg = stderr.strip() or stdout.strip() or (
+                                f"Exit code {returncode}"
+                            )
                             self.log(f"Error processing {file}: {error_msg}")
                             if retry == self.MAX_RETRIES - 1:
                                 messagebox.showerror(
